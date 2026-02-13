@@ -6,9 +6,17 @@ const Expense = require('../models/Expense');
 exports.getExpenses = async (req, res) => {
     try {
         const { userId } = req.query;
-        const query = userId ? { userId } : {};
 
-        const expenses = await Expense.find(query).sort({ date: -1, createdAt: -1 });
+        // If no userId is provided, return empty data (security/isolation)
+        if (!userId) {
+            return res.status(200).json({
+                success: true,
+                count: 0,
+                data: []
+            });
+        }
+
+        const expenses = await Expense.find({ userId }).sort({ date: -1, createdAt: -1 });
         res.status(200).json({
             success: true,
             count: expenses.length,
