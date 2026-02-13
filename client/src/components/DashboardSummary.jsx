@@ -108,19 +108,6 @@ const DashboardSummary = () => {
                 </div>
             </div>
 
-            {/* Simple progress bar visual */}
-            <div className="mt-6">
-                <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>Monthly Budget Limit (Goal: ₹{salary})</span>
-                    <span>{salary > 0 ? Math.min((total / salary) * 100, 100).toFixed(0) : 0}%</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                    <div
-                        className="bg-indigo-600 h-2.5 rounded-full transition-all duration-1000 ease-out"
-                        style={{ width: `${salary > 0 ? Math.min((total / salary) * 100, 100) : 0}%` }}
-                    ></div>
-                </div>
-            </div>
         </div>
     );
 };
