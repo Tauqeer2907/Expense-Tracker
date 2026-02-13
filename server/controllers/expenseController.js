@@ -5,18 +5,7 @@ const Expense = require('../models/Expense');
 // @access  Public
 exports.getExpenses = async (req, res) => {
     try {
-        const { userId } = req.query;
-
-        // If no userId is provided, return empty data (security/isolation)
-        if (!userId) {
-            return res.status(200).json({
-                success: true,
-                count: 0,
-                data: []
-            });
-        }
-
-        const expenses = await Expense.find({ userId }).sort({ date: -1, createdAt: -1 });
+        const expenses = await Expense.find({ userId: req.user.id }).sort({ date: -1, createdAt: -1 });
         res.status(200).json({
             success: true,
             count: expenses.length,
@@ -35,14 +24,14 @@ exports.getExpenses = async (req, res) => {
 // @access  Public
 exports.addExpense = async (req, res) => {
     try {
-        const { amount, category, description, date, userId } = req.body;
+        const { amount, category, description, date } = req.body;
 
         const expense = await Expense.create({
             amount,
             category,
             description,
             date,
-            userId
+            userId: req.user.id
         });
 
         res.status(201).json({

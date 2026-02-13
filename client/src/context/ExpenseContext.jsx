@@ -7,19 +7,41 @@ const initialState = {
     loading: true,
     error: null,
     salary: Number(localStorage.getItem('salary')) || 0,
-    userId: localStorage.getItem('expense_user_id') || ('user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36)),
+    user: JSON.parse(localStorage.getItem('user')) || null,
+    token: localStorage.getItem('token') || null,
 };
-
-// Ensure a newly generated ID is saved
-if (!localStorage.getItem('expense_user_id')) {
-    localStorage.setItem('expense_user_id', initialState.userId);
-}
 
 export const ExpenseContext = createContext(initialState);
 
 // Reducer
 const expenseReducer = (state, action) => {
     switch (action.type) {
+        case 'USER_LOADED':
+        case 'LOGIN_SUCCESS':
+        case 'REGISTER_SUCCESS':
+            localStorage.setItem('token', action.payload.token);
+            localStorage.setItem('user', JSON.stringify(action.payload.user));
+            return {
+                ...state,
+                ...action.payload,
+                loading: false,
+            };
+        case 'LOGOUT':
+        case 'AUTH_ERROR':
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            return {
+                ...state,
+                token: null,
+                user: null,
+                expenses: [],
+                loading: false,
+            };
+        case 'SET_LOADING':
+            return {
+                ...state,
+                loading: true
+            };
         case 'GET_EXPENSES':
             return {
                 ...state,
@@ -47,11 +69,6 @@ const expenseReducer = (state, action) => {
                 ...state,
                 salary: action.payload
             };
-        case 'UPDATE_USER_ID':
-            return {
-                ...state,
-                userId: action.payload
-            };
         default:
             return state;
     }
@@ -61,25 +78,72 @@ const expenseReducer = (state, action) => {
 export const ExpenseProvider = ({ children }) => {
     const [state, dispatch] = useReducer(expenseReducer, initialState);
 
-    // Actions
-    async function getExpenses() {
+    // Auth Actions
+    async function login(username, password) {
+        dispatch({ type: 'SET_LOADING' });
         try {
-            const res = await api.getExpenses(state.userId);
+            const res = await api.login({ username, password });
+            dispatch({
+                type: 'LOGIN_SUCCESS',
+                payload: res,
+            });
+            toast.success(`Welcome back, ${res.user.username}!`);
+        } catch (err) {
+            dispatch({
+                type: 'AUTH_ERROR',
+                payload: err.response?.data?.error || 'Login failed',
+            });
+            toast.error(err.response?.data?.error || 'Invalid credentials');
+        }
+    }
+
+    async function register(username, password) {
+        dispatch({ type: 'SET_LOADING' });
+        try {
+            const res = await api.register({ username, password });
+            dispatch({
+                type: 'REGISTER_SUCCESS',
+                payload: res,
+            });
+            toast.success('Account created successfully!');
+        } catch (err) {
+            dispatch({
+                type: 'AUTH_ERROR',
+                payload: err.response?.data?.error || 'Registration failed',
+            });
+            toast.error(err.response?.data?.error || 'Registration failed');
+        }
+    }
+
+    function logout() {
+        dispatch({ type: 'LOGOUT' });
+        toast.info('Logged out securely');
+    }
+
+    // Expense Actions
+    async function getExpenses() {
+        if (!state.token) return;
+        try {
+            const res = await api.getExpenses();
             dispatch({
                 type: 'GET_EXPENSES',
                 payload: res.data,
             });
         } catch (err) {
-            dispatch({
-                type: 'EXPENSE_ERROR',
-                payload: err.response?.data?.error || 'Server Error',
-            });
+            if (err.response?.status === 401) {
+                dispatch({ type: 'AUTH_ERROR' });
+            } else {
+                dispatch({
+                    type: 'EXPENSE_ERROR',
+                    payload: err.response?.data?.error || 'Server Error',
+                });
+            }
         }
     }
 
     async function addExpense(expense) {
         try {
-            const res = await api.addExpense({ ...expense, userId: state.userId });
+            const res = await api.addExpense(expense);
             dispatch({
                 type: 'ADD_EXPENSE',
                 payload: res.data,
@@ -123,21 +187,14 @@ export const ExpenseProvider = ({ children }) => {
         toast.success('Salary updated!');
     }
 
-    function updateUserId(newId) {
-        if (!newId || newId.trim() === '') return;
-
-        localStorage.setItem('expense_user_id', newId.trim());
-        dispatch({
-            type: 'UPDATE_USER_ID',
-            payload: newId.trim()
-        });
-        toast.success('Sync Key updated! Refreshing data...');
-    }
-
-    // Refresh expenses when userId changes
+    // Initial load
     useEffect(() => {
-        getExpenses();
-    }, [state.userId]);
+        if (state.token) {
+            getExpenses();
+        } else {
+            dispatch({ type: 'AUTH_ERROR' }); // Ensure loading stops if no token
+        }
+    }, [state.token]);
 
     return (
         <ExpenseContext.Provider
@@ -146,12 +203,15 @@ export const ExpenseProvider = ({ children }) => {
                 error: state.error,
                 loading: state.loading,
                 salary: state.salary,
-                userId: state.userId,
+                user: state.user,
+                token: state.token,
+                login,
+                register,
+                logout,
                 getExpenses,
                 addExpense,
                 deleteExpense,
                 updateSalary,
-                updateUserId,
             }}
         >
             {children}

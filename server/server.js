@@ -37,6 +37,7 @@ app.use(cors({
 app.use(express.json());
 
 // Routes
+app.use("/api/auth", require("./routes/auth"));
 app.use("/api/expenses", require("./routes/expenses"));
 
 // Test Route (optional but recommended)

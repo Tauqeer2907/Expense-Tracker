@@ -1,9 +1,9 @@
-import { Wallet, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
-import SyncSettings from './SyncSettings';
+import { Wallet, LogOut, User } from 'lucide-react';
+import { useContext } from 'react';
+import { ExpenseContext } from '../context/ExpenseContext';
 
 const Header = () => {
-    const [showSync, setShowSync] = useState(false);
+    const { user, logout } = useContext(ExpenseContext);
 
     return (
         <nav className="glass-panel sticky top-0 z-50 mb-8 rounded-b-2xl">
@@ -17,22 +17,22 @@ const Header = () => {
                     </h1>
                 </div>
                 <div className="flex items-center space-x-4">
+                    <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
+                        <div className="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md">
+                            {user?.username?.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-bold text-slate-700 mr-1">{user?.username}</span>
+                    </div>
+
                     <button
-                        onClick={() => setShowSync(!showSync)}
-                        className={`p-2 rounded-full transition-all ${showSync ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:bg-slate-100'}`}
-                        title="Sync Devices"
+                        onClick={logout}
+                        className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all border border-transparent hover:border-red-100"
+                        title="Logout Securely"
                     >
-                        <RefreshCw size={20} />
+                        <LogOut size={20} />
                     </button>
-                    <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold text-xs shadow-inner">US</div>
                 </div>
             </div>
-
-            {showSync && (
-                <div className="max-w-4xl mx-auto px-6 pb-6">
-                    <SyncSettings />
-                </div>
-            )}
         </nav>
     );
 };
