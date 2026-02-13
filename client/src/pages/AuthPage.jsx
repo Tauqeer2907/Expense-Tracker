@@ -104,12 +104,26 @@ const AuthPage = () => {
                     </button>
                 </form>
 
-                <div className="mt-8 text-center relative z-10">
+                <div className="mt-8 text-center relative z-10 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <button
-                        onClick={() => setIsLogin(!isLogin)}
-                        className="text-slate-500 hover:text-indigo-600 font-bold transition-colors text-sm underline underline-offset-4 decoration-slate-200 hover:decoration-indigo-200"
+                        type="button"
+                        onClick={() => {
+                            setIsLogin(!isLogin);
+                            setFormData({ username: '', password: '' });
+                        }}
+                        className="w-full flex items-center justify-center gap-2 text-slate-600 hover:text-indigo-600 font-bold transition-all text-sm"
                     >
-                        {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Log In'}
+                        {isLogin ? (
+                            <>
+                                <UserPlus size={18} />
+                                Need an account? <span className="text-indigo-600 underline">Sign Up</span>
+                            </>
+                        ) : (
+                            <>
+                                <LogIn size={18} />
+                                Already have an account? <span className="text-indigo-600 underline">Log In</span>
+                            </>
+                        )}
                     </button>
                 </div>
 
