@@ -76,6 +76,7 @@ export const ExpenseProvider = ({ children }) => {
             toast.success('Expense added successfully!');
             return true;
         } catch (err) {
+            console.error('Add Expense Error Details:', err);
             dispatch({
                 type: 'EXPENSE_ERROR',
                 payload: err.response?.data?.error || 'Server Error',
