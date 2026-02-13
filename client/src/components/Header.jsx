@@ -1,6 +1,10 @@
-import { Wallet } from 'lucide-react';
+import { Wallet, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import SyncSettings from './SyncSettings';
 
 const Header = () => {
+    const [showSync, setShowSync] = useState(false);
+
     return (
         <nav className="glass-panel sticky top-0 z-50 mb-8 rounded-b-2xl">
             <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -13,9 +17,22 @@ const Header = () => {
                     </h1>
                 </div>
                 <div className="flex items-center space-x-4">
-                    <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold text-xs">US</div>
+                    <button
+                        onClick={() => setShowSync(!showSync)}
+                        className={`p-2 rounded-full transition-all ${showSync ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:bg-slate-100'}`}
+                        title="Sync Devices"
+                    >
+                        <RefreshCw size={20} />
+                    </button>
+                    <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold text-xs shadow-inner">US</div>
                 </div>
             </div>
+
+            {showSync && (
+                <div className="max-w-4xl mx-auto px-6 pb-6">
+                    <SyncSettings />
+                </div>
+            )}
         </nav>
     );
 };

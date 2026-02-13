@@ -7,7 +7,13 @@ const initialState = {
     loading: true,
     error: null,
     salary: Number(localStorage.getItem('salary')) || 0,
+    userId: localStorage.getItem('expense_user_id') || ('user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36)),
 };
+
+// Ensure a newly generated ID is saved
+if (!localStorage.getItem('expense_user_id')) {
+    localStorage.setItem('expense_user_id', initialState.userId);
+}
 
 export const ExpenseContext = createContext(initialState);
 
@@ -41,22 +47,15 @@ const expenseReducer = (state, action) => {
                 ...state,
                 salary: action.payload
             };
+        case 'UPDATE_USER_ID':
+            return {
+                ...state,
+                userId: action.payload
+            };
         default:
             return state;
     }
 };
-
-// Get or create unique user ID
-const getUserId = () => {
-    let userId = localStorage.getItem('expense_user_id');
-    if (!userId) {
-        userId = 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-        localStorage.setItem('expense_user_id', userId);
-    }
-    return userId;
-};
-
-const userId = getUserId();
 
 // Provider Component
 export const ExpenseProvider = ({ children }) => {
@@ -65,7 +64,7 @@ export const ExpenseProvider = ({ children }) => {
     // Actions
     async function getExpenses() {
         try {
-            const res = await api.getExpenses(userId);
+            const res = await api.getExpenses(state.userId);
             dispatch({
                 type: 'GET_EXPENSES',
                 payload: res.data,
@@ -80,7 +79,7 @@ export const ExpenseProvider = ({ children }) => {
 
     async function addExpense(expense) {
         try {
-            const res = await api.addExpense({ ...expense, userId });
+            const res = await api.addExpense({ ...expense, userId: state.userId });
             dispatch({
                 type: 'ADD_EXPENSE',
                 payload: res.data,
@@ -124,6 +123,22 @@ export const ExpenseProvider = ({ children }) => {
         toast.success('Salary updated!');
     }
 
+    function updateUserId(newId) {
+        if (!newId || newId.trim() === '') return;
+
+        localStorage.setItem('expense_user_id', newId.trim());
+        dispatch({
+            type: 'UPDATE_USER_ID',
+            payload: newId.trim()
+        });
+        toast.success('Sync Key updated! Refreshing data...');
+    }
+
+    // Refresh expenses when userId changes
+    useEffect(() => {
+        getExpenses();
+    }, [state.userId]);
+
     return (
         <ExpenseContext.Provider
             value={{
@@ -131,10 +146,12 @@ export const ExpenseProvider = ({ children }) => {
                 error: state.error,
                 loading: state.loading,
                 salary: state.salary,
+                userId: state.userId,
                 getExpenses,
                 addExpense,
                 deleteExpense,
                 updateSalary,
+                updateUserId,
             }}
         >
             {children}
