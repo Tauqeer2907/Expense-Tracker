@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://tracker-backend.onrender.com/api/expenses';
+const API_URL = 'https://tracker-f64r.onrender.com/api/expenses';
 
 // Get all expenses
 export const getExpenses = async () => {
