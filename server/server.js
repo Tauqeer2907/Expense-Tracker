@@ -14,6 +14,7 @@ const app = express();
 // CORS Configuration
 const allowedOrigins = [
     "https://tracker-frontend-ikk5.onrender.com",
+    "https://expense-tracker-frontend-664e.onrender.com",
     "http://localhost:5173"
 ];
 
