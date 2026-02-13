@@ -1,11 +1,14 @@
 const Expense = require('../models/Expense');
 
 // @desc    Get all expenses
-// @route   GET /api/expenses
+// @route   GET /api/expenses?userId=...
 // @access  Public
 exports.getExpenses = async (req, res) => {
     try {
-        const expenses = await Expense.find().sort({ date: -1, createdAt: -1 });
+        const { userId } = req.query;
+        const query = userId ? { userId } : {};
+
+        const expenses = await Expense.find(query).sort({ date: -1, createdAt: -1 });
         res.status(200).json({
             success: true,
             count: expenses.length,
@@ -24,13 +27,14 @@ exports.getExpenses = async (req, res) => {
 // @access  Public
 exports.addExpense = async (req, res) => {
     try {
-        const { amount, category, description, date } = req.body;
+        const { amount, category, description, date, userId } = req.body;
 
         const expense = await Expense.create({
             amount,
             category,
             description,
-            date
+            date,
+            userId
         });
 
         res.status(201).json({

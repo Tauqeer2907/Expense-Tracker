@@ -46,6 +46,18 @@ const expenseReducer = (state, action) => {
     }
 };
 
+// Get or create unique user ID
+const getUserId = () => {
+    let userId = localStorage.getItem('expense_user_id');
+    if (!userId) {
+        userId = 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        localStorage.setItem('expense_user_id', userId);
+    }
+    return userId;
+};
+
+const userId = getUserId();
+
 // Provider Component
 export const ExpenseProvider = ({ children }) => {
     const [state, dispatch] = useReducer(expenseReducer, initialState);
@@ -53,7 +65,7 @@ export const ExpenseProvider = ({ children }) => {
     // Actions
     async function getExpenses() {
         try {
-            const res = await api.getExpenses();
+            const res = await api.getExpenses(userId);
             dispatch({
                 type: 'GET_EXPENSES',
                 payload: res.data,
@@ -68,7 +80,7 @@ export const ExpenseProvider = ({ children }) => {
 
     async function addExpense(expense) {
         try {
-            const res = await api.addExpense(expense);
+            const res = await api.addExpense({ ...expense, userId });
             dispatch({
                 type: 'ADD_EXPENSE',
                 payload: res.data,

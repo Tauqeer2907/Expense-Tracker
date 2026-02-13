@@ -4,8 +4,10 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const API_URL = `${BASE_URL}/api/expenses`;
 
 // Get all expenses
-export const getExpenses = async () => {
-    const response = await axios.get(API_URL);
+export const getExpenses = async (userId) => {
+    const response = await axios.get(API_URL, {
+        params: { userId }
+    });
     return response.data;
 };
 
