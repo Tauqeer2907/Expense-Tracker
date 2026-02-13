@@ -1,11 +1,12 @@
 import { useState, useContext } from 'react';
 import { ExpenseContext } from '../context/ExpenseContext';
-import { LogIn, UserPlus, Wallet, ShieldCheck, ArrowRight } from 'lucide-react';
+import { LogIn, UserPlus, Wallet, ShieldCheck, ArrowRight, Eye, EyeOff, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AuthPage = () => {
     const { login, register, loading, error } = useContext(ExpenseContext);
     const [isLogin, setIsLogin] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -47,6 +48,13 @@ const AuthPage = () => {
                     </p>
                 </div>
 
+                {isLogin && (
+                    <div className="mb-6 bg-blue-50 border border-blue-100 p-3 rounded-2xl flex items-center gap-3 text-blue-700 text-xs font-semibold relative z-10">
+                        <Info size={18} className="shrink-0" />
+                        <p>First timer? Click "Sign Up" below to create your password first!</p>
+                    </div>
+                )}
+
                 <form onSubmit={onSubmit} className="space-y-5 relative z-10">
                     <div className="space-y-1">
                         <label className="text-sm font-bold text-slate-700 ml-1">Username</label>
@@ -62,15 +70,24 @@ const AuthPage = () => {
                     </div>
                     <div className="space-y-1">
                         <label className="text-sm font-bold text-slate-700 ml-1">Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={password}
-                            onChange={onChange}
-                            className="w-full bg-white border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-400 font-medium"
-                            placeholder="••••••••"
-                            required
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={password}
+                                onChange={onChange}
+                                className="w-full bg-white border border-slate-200 p-4 pr-12 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-400 font-medium"
+                                placeholder="••••••••"
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
                     </div>
 
                     <button
