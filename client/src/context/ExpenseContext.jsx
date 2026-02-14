@@ -6,9 +6,9 @@ const initialState = {
     expenses: [],
     loading: true,
     error: null,
-    salary: Number(localStorage.getItem('salary')) || 0,
-    user: JSON.parse(localStorage.getItem('user')) || null,
-    token: localStorage.getItem('token') || null,
+    user: JSON.parse(sessionStorage.getItem('user')) || null,
+    token: sessionStorage.getItem('token') || null,
+    salary: JSON.parse(sessionStorage.getItem('user'))?.salary || 0,
 };
 
 export const ExpenseContext = createContext(initialState);
@@ -19,17 +19,18 @@ const expenseReducer = (state, action) => {
         case 'USER_LOADED':
         case 'LOGIN_SUCCESS':
         case 'REGISTER_SUCCESS':
-            localStorage.setItem('token', action.payload.token);
-            localStorage.setItem('user', JSON.stringify(action.payload.user));
+            sessionStorage.setItem('token', action.payload.token);
+            sessionStorage.setItem('user', JSON.stringify(action.payload.user));
             return {
                 ...state,
                 ...action.payload,
+                salary: action.payload.user.salary || 0,
                 loading: false,
             };
         case 'LOGOUT':
         case 'AUTH_ERROR':
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('user');
             return {
                 ...state,
                 token: null,
@@ -152,11 +153,16 @@ export const ExpenseProvider = ({ children }) => {
             return true;
         } catch (err) {
             console.error('Add Expense Error Details:', err);
-            dispatch({
-                type: 'EXPENSE_ERROR',
-                payload: err.response?.data?.error || 'Server Error',
-            });
-            toast.error(err.response?.data?.error || 'Failed to add expense');
+            if (err.response?.status === 401) {
+                dispatch({ type: 'AUTH_ERROR' });
+                toast.error('Session expired. Please login again.');
+            } else {
+                dispatch({
+                    type: 'EXPENSE_ERROR',
+                    payload: err.response?.data?.error || 'Server Error',
+                });
+                toast.error(err.response?.data?.error || 'Failed to add expense');
+            }
             return false;
         }
     }
@@ -170,21 +176,46 @@ export const ExpenseProvider = ({ children }) => {
             });
             toast.info('Expense deleted');
         } catch (err) {
-            dispatch({
-                type: 'EXPENSE_ERROR',
-                payload: err.response?.data?.error || 'Server Error',
-            });
-            toast.error('Failed to delete expense');
+            if (err.response?.status === 401) {
+                dispatch({ type: 'AUTH_ERROR' });
+                toast.error('Session expired. Please login again.');
+            } else {
+                dispatch({
+                    type: 'EXPENSE_ERROR',
+                    payload: err.response?.data?.error || 'Server Error',
+                });
+                toast.error('Failed to delete expense');
+            }
         }
     }
 
-    function updateSalary(amount) {
-        localStorage.setItem('salary', amount);
-        dispatch({
-            type: 'UPDATE_SALARY',
-            payload: Number(amount)
-        });
-        toast.success('Salary updated!');
+    async function updateSalary(amount) {
+        const numAmount = Number(amount);
+        try {
+            const res = await api.updateUser({ salary: numAmount });
+
+            // Update session storage
+            const updatedUser = { ...state.user, salary: numAmount };
+            sessionStorage.setItem('user', JSON.stringify(updatedUser));
+
+            dispatch({
+                type: 'UPDATE_SALARY',
+                payload: numAmount
+            });
+            toast.success('Salary updated!');
+        } catch (err) {
+            console.error('Update Salary Error:', err);
+            if (err.response?.status === 401) {
+                dispatch({ type: 'AUTH_ERROR' });
+                toast.error('Session expired. Please login again.');
+            } else {
+                dispatch({
+                    type: 'EXPENSE_ERROR',
+                    payload: err.response?.data?.error || err.message,
+                });
+                toast.error(err.response?.data?.error || err.message || 'Failed to update salary');
+            }
+        }
     }
 
     // Initial load
@@ -192,7 +223,10 @@ export const ExpenseProvider = ({ children }) => {
         if (state.token) {
             getExpenses();
         } else {
-            dispatch({ type: 'AUTH_ERROR' }); // Ensure loading stops if no token
+            // Check if we need to clear loading state if no token
+            if (state.loading && !state.token) {
+                dispatch({ type: 'AUTH_ERROR' });
+            }
         }
     }, [state.token]);
 

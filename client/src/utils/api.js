@@ -6,7 +6,7 @@ const API_URL = `${BASE_URL}/api/expenses`;
 // Add a request interceptor to include the auth token
 axios.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -20,6 +20,13 @@ axios.interceptors.request.use(
 // Auth endpoints
 export const register = async (userData) => {
     const response = await axios.post(`${BASE_URL}/api/auth/register`, userData);
+    return response.data;
+};
+
+
+
+export const updateUser = async (userData) => {
+    const response = await axios.put(`${BASE_URL}/api/auth/profile`, userData);
     return response.data;
 };
 

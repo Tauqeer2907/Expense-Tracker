@@ -74,6 +74,40 @@ exports.login = async (req, res) => {
     }
 };
 
+// @desc    Update user profile (salary)
+// @route   PUT /api/auth/profile
+// @access  Private
+exports.updateProfile = async (req, res) => {
+    try {
+        const { salary } = req.body;
+
+        const user = await User.findById(req.user.id);
+
+        if (user) {
+            user.salary = salary !== undefined ? salary : user.salary;
+            const updatedUser = await user.save();
+
+            res.json({
+                success: true,
+                user: {
+                    id: updatedUser._id,
+                    username: updatedUser.username,
+                    salary: updatedUser.salary
+                }
+            });
+        } else {
+            res.status(404);
+            throw new Error('User not found');
+        }
+    } catch (error) {
+        console.error('Update Profile Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
     // Create token
@@ -86,7 +120,8 @@ const sendTokenResponse = (user, statusCode, res) => {
         token,
         user: {
             id: user._id,
-            username: user.username
+            username: user.username,
+            salary: user.salary
         }
     });
 };
