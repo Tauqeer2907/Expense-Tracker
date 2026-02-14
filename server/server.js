@@ -5,51 +5,79 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 
-// Connect Database
-connectDB();
-
 const app = express();
 
-// CORS Configuration
+// =======================
+// CONNECT DATABASE
+// =======================
+connectDB();
+
+// =======================
+// MIDDLEWARE
+// =======================
+app.use(express.json());
+
+// =======================
+// CORS CONFIG (SAFE FOR DEPLOY)
+// =======================
 const allowedOrigins = [
+    process.env.FRONTEND_URL, // from env (BEST WAY)
     "https://tracker-frontend-ikk5.onrender.com",
     "https://expense-tracker-frontend-664e.onrender.com",
     "http://localhost:5173"
 ];
 
-app.use(cors({
+const corsOptions = {
     origin: function (origin, callback) {
-        // Allow requests with no origin (mobile apps / curl)
+        // allow requests with no origin (mobile apps, curl, postman)
         if (!origin) return callback(null, true);
 
-        if (!allowedOrigins.includes(origin)) {
-            return callback(
-                new Error("CORS policy does not allow this origin"),
-                false
-            );
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        } else {
+            return callback(new Error("Not allowed by CORS"));
         }
-        return callback(null, true);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
-}));
+};
 
-// Middleware
-app.use(express.json());
+app.use(cors(corsOptions));
 
-// Routes
+// Handle preflight requests properly
+app.options("*", cors(corsOptions));
+
+
+// =======================
+// ROUTES
+// =======================
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/expenses", require("./routes/expenses"));
 
-// Test Route
+// Root test route
 app.get("/", (req, res) => {
     res.send("API is running...");
 });
 
-// PORT
+
+// =======================
+// GLOBAL ERROR HANDLER
+// =======================
+app.use((err, req, res, next) => {
+    console.error("Server Error:", err.message);
+    res.status(500).json({
+        message: "Server Error",
+        error: err.message
+    });
+});
+
+
+// =======================
+// START SERVER
+// =======================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`✅ Server running on port ${PORT}`);
 });
