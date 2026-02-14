@@ -1,10 +1,9 @@
+// LOAD ENV FIRST (must be at top)
+require("dotenv").config();
+
 const express = require("express");
-const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
-
-// Load environment variables
-dotenv.config();
 
 // Connect Database
 connectDB();
@@ -20,11 +19,14 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
+        // Allow requests with no origin (mobile apps / curl)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
+
+        if (!allowedOrigins.includes(origin)) {
+            return callback(
+                new Error("CORS policy does not allow this origin"),
+                false
+            );
         }
         return callback(null, true);
     },
@@ -40,7 +42,7 @@ app.use(express.json());
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/expenses", require("./routes/expenses"));
 
-// Test Route (optional but recommended)
+// Test Route
 app.get("/", (req, res) => {
     res.send("API is running...");
 });
