@@ -21,15 +21,14 @@ app.use(express.json());
 // CORS CONFIG (SAFE FOR DEPLOY)
 // =======================
 const allowedOrigins = [
-    process.env.FRONTEND_URL, // from env (BEST WAY)
+    process.env.FRONTEND_URL,
     "https://tracker-frontend-ikk5.onrender.com",
     "https://expense-tracker-frontend-664e.onrender.com",
     "http://localhost:5173"
 ];
 
-const corsOptions = {
+app.use(cors({
     origin: function (origin, callback) {
-        // allow requests with no origin (mobile apps, curl, postman)
         if (!origin) return callback(null, true);
 
         if (allowedOrigins.includes(origin)) {
@@ -38,15 +37,11 @@ const corsOptions = {
             return callback(new Error("Not allowed by CORS"));
         }
     },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-};
+    credentials: true
+}));
 
-app.use(cors(corsOptions));
-
-// Handle preflight requests properly
-app.options("*", cors(corsOptions));
+// 🚫 DO NOT ADD app.options("*", cors())
+// Express 5 / Node 22 crashes with "*"
 
 
 // =======================
