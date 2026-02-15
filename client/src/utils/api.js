@@ -1,54 +1,60 @@
-import axios from 'axios';
+import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
-const API_URL = `${BASE_URL}/api/expenses`;
+// =======================
+// BASE URL
+// =======================
+const BASE_URL = import.meta.env.VITE_API_URL; // already includes /api
+const API = axios.create({
+    baseURL: BASE_URL,
+    withCredentials: true, // if using cookies/auth
+});
 
-// Add a request interceptor to include the auth token
-axios.interceptors.request.use(
+// =======================
+// AUTH TOKEN INTERCEPTOR
+// =======================
+API.interceptors.request.use(
     (config) => {
-        const token = sessionStorage.getItem('token');
+        const token = sessionStorage.getItem("token");
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
-// Auth endpoints
+// =======================
+// AUTH ENDPOINTS
+// =======================
 export const register = async (userData) => {
-    const response = await axios.post(`${BASE_URL}/api/auth/register`, userData);
-    return response.data;
-};
-
-
-
-export const updateUser = async (userData) => {
-    const response = await axios.put(`${BASE_URL}/api/auth/profile`, userData);
+    const response = await API.post("/auth/register", userData);
     return response.data;
 };
 
 export const login = async (userData) => {
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, userData);
+    const response = await API.post("/auth/login", userData);
     return response.data;
 };
 
-// Get all expenses
+export const updateUser = async (userData) => {
+    const response = await API.put("/auth/profile", userData);
+    return response.data;
+};
+
+// =======================
+// EXPENSES ENDPOINTS
+// =======================
 export const getExpenses = async () => {
-    const response = await axios.get(API_URL);
+    const response = await API.get("/expenses");
     return response.data;
 };
 
-// Add new expense
 export const addExpense = async (expenseData) => {
-    const response = await axios.post(API_URL, expenseData);
+    const response = await API.post("/expenses", expenseData);
     return response.data;
 };
 
-// Delete expense
 export const deleteExpense = async (id) => {
-    const response = await axios.delete(`${API_URL}/${id}`);
+    const response = await API.delete(`/expenses/${id}`);
     return response.data;
 };
