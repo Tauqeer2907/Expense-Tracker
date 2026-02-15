@@ -3,10 +3,11 @@ import axios from "axios";
 // =======================
 // BASE URL
 // =======================
-const BASE_URL = import.meta.env.VITE_API_URL; // already includes /api
+// IMPORTANT: VITE_API_URL should be:
+// https://backend-1-ams3.onrender.com
 const API = axios.create({
-    baseURL: BASE_URL,
-    withCredentials: true, // if using cookies/auth
+    baseURL: `${import.meta.env.VITE_API_URL}/api`,
+    withCredentials: true,
 });
 
 // =======================
