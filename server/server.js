@@ -1,5 +1,32 @@
 // =======================
-// CORS CONFIG (UPDATED & FIXED)
+// LOAD ENV FIRST
+// =======================
+require("dotenv").config();
+
+// =======================
+// IMPORTS
+// =======================
+const express = require("express");
+const cors = require("cors");
+const connectDB = require("./config/db");
+
+// =======================
+// INIT APP (VERY IMPORTANT - BEFORE CORS)
+// =======================
+const app = express();
+
+// =======================
+// CONNECT DATABASE
+// =======================
+connectDB();
+
+// =======================
+// MIDDLEWARE
+// =======================
+app.use(express.json());
+
+// =======================
+// CORS CONFIG (FIXED)
 // =======================
 
 const allowedOrigins = [
@@ -9,7 +36,7 @@ const allowedOrigins = [
 
 const corsOptions = {
     origin: function (origin, callback) {
-        if (!origin) return callback(null, true); // allow Postman
+        if (!origin) return callback(null, true);
 
         if (allowedOrigins.includes(origin)) {
             callback(null, true);
@@ -22,4 +49,34 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // VERY IMPORTANT (fixes preflight)
+app.options("*", cors(corsOptions));
+
+// =======================
+// ROUTES
+// =======================
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/expenses", require("./routes/expenses"));
+
+app.get("/", (req, res) => {
+    res.json({ message: "API is running!" });
+});
+
+// =======================
+// ERROR HANDLER
+// =======================
+app.use((err, req, res, next) => {
+    console.error("Server Error:", err.message);
+    res.status(500).json({
+        message: "Server Error",
+        error: err.message
+    });
+});
+
+// =======================
+// START SERVER
+// =======================
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+});
