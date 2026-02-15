@@ -119,6 +119,7 @@ export const ExpenseProvider = ({ children }) => {
                 payload: err.response?.data?.error || 'Registration failed',
             });
             toast.error(err.response?.data?.error || 'Registration failed');
+            console.error("Registration Error:", err.response?.data || err.message);
         }
     }
 
