@@ -9,6 +9,7 @@ const initialState = {
     user: JSON.parse(sessionStorage.getItem('user')) || null,
     token: sessionStorage.getItem('token') || null,
     salary: JSON.parse(sessionStorage.getItem('user'))?.salary || 0,
+    monthlySalaries: JSON.parse(sessionStorage.getItem('user'))?.monthlySalaries || [],
 };
 
 export const ExpenseContext = createContext(initialState);
@@ -68,7 +69,12 @@ const expenseReducer = (state, action) => {
         case 'UPDATE_SALARY':
             return {
                 ...state,
-                salary: action.payload
+                salary: action.payload.salary,
+                user: {
+                    ...state.user,
+                    salary: action.payload.salary,
+                    monthlySalaries: action.payload.monthlySalaries
+                }
             };
         default:
             return state;
@@ -189,18 +195,31 @@ export const ExpenseProvider = ({ children }) => {
         }
     }
 
-    async function updateSalary(amount) {
+    async function updateSalary(amount, month, year) {
         const numAmount = Number(amount);
         try {
-            const res = await api.updateUser({ salary: numAmount });
+            const payload = { salary: numAmount };
+            if (month && year) {
+                payload.month = month;
+                payload.year = year;
+            }
+
+            const res = await api.updateUser(payload);
 
             // Update session storage
-            const updatedUser = { ...state.user, salary: numAmount };
+            const updatedUser = {
+                ...state.user,
+                salary: numAmount,
+                monthlySalaries: res.user.monthlySalaries
+            };
             sessionStorage.setItem('user', JSON.stringify(updatedUser));
 
             dispatch({
                 type: 'UPDATE_SALARY',
-                payload: numAmount
+                payload: {
+                    salary: numAmount,
+                    monthlySalaries: res.user.monthlySalaries
+                }
             });
             toast.success('Salary updated!');
         } catch (err) {
@@ -237,6 +256,7 @@ export const ExpenseProvider = ({ children }) => {
                 error: state.error,
                 loading: state.loading,
                 salary: state.salary,
+                monthlySalaries: state.user?.monthlySalaries || [],
                 user: state.user,
                 token: state.token,
                 login,

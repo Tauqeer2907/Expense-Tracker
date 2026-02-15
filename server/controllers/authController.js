@@ -84,7 +84,32 @@ exports.updateProfile = async (req, res) => {
         const user = await User.findById(req.user.id);
 
         if (user) {
-            user.salary = salary !== undefined ? salary : user.salary;
+            if (salary !== undefined) {
+                // Update current salary for backward compatibility or display
+                user.salary = salary;
+
+                // Update monthly salary history if month and year are provided
+                if (req.body.month && req.body.year) {
+                    const month = req.body.month;
+                    const year = req.body.year;
+
+                    // Check if entry exists for this month/year
+                    const existingIndex = user.monthlySalaries.findIndex(
+                        item => item.month === month && item.year === year
+                    );
+
+                    if (existingIndex !== -1) {
+                        user.monthlySalaries[existingIndex].amount = salary;
+                    } else {
+                        user.monthlySalaries.push({
+                            month,
+                            year,
+                            amount: salary
+                        });
+                    }
+                }
+            }
+
             const updatedUser = await user.save();
 
             res.json({
@@ -92,7 +117,8 @@ exports.updateProfile = async (req, res) => {
                 user: {
                     id: updatedUser._id,
                     username: updatedUser.username,
-                    salary: updatedUser.salary
+                    salary: updatedUser.salary,
+                    monthlySalaries: updatedUser.monthlySalaries
                 }
             });
         } else {
@@ -121,7 +147,8 @@ const sendTokenResponse = (user, statusCode, res) => {
         user: {
             id: user._id,
             username: user.username,
-            salary: user.salary
+            salary: user.salary,
+            monthlySalaries: user.monthlySalaries
         }
     });
 };

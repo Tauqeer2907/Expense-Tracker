@@ -21,7 +21,12 @@ const UserSchema = new mongoose.Schema({
     salary: {
         type: Number,
         default: 0
-    }
+    },
+    monthlySalaries: [{
+        month: String,
+        year: Number,
+        amount: Number
+    }]
 });
 
 // Encrypt password using bcrypt
