@@ -31,7 +31,7 @@ app.use(express.json());
 
 // List of allowed frontend URLs
 const allowedOrigins = [
-    process.env.FRONTEND_URL, // Add your future Vercel URL in .env
+    process.env.FRONTEND_URL, // Add your Vercel URL in .env
     "https://tracker-frontend-ikk5.onrender.com",
     "https://expense-tracker-frontend-664e.onrender.com",
     "http://localhost:5173"
@@ -58,16 +58,32 @@ app.use(cors({
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/expenses", require("./routes/expenses"));
 
-// Root test route
+// Root route
 app.get("/", (req, res) => {
     res.json({ message: "API is running!" });
 });
 
-// Optional: Test route for frontend
+// Test route for frontend
 app.get("/api/test", (req, res) => {
     res.json({ message: "Backend is working!" });
 });
 
 // =======================
 // GLOBAL ERROR HANDLER
-// =================
+// =======================
+app.use((err, req, res, next) => {
+    console.error("Server Error:", err.message);
+    res.status(500).json({
+        message: "Server Error",
+        error: err.message
+    });
+});
+
+// =======================
+// START SERVER
+// =======================
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+});
